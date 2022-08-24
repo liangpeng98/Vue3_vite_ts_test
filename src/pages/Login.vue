@@ -2,8 +2,8 @@
   <div class="login">
     <h3>登录</h3>
     <el-form ref="ruleFormRef" :model="rulesForm" label-width="80px" label-position="left" :rules="rules">
-      <el-form-item label="username" prop="name">
-        <el-input v-model.trim="rulesForm.name" />
+      <el-form-item label="username" prop="username">
+        <el-input v-model.trim="rulesForm.username" />
       </el-form-item>
       <el-form-item label="password" prop="password">
         <el-input v-model.trim="rulesForm.password" />
@@ -17,54 +17,60 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, getCurrentInstance } from 'vue'
-import type { ComponentInternalInstance } from 'vue'
-//ComponentInternalInstance
-import type { FormRules, FormInstance } from 'element-plus'
-const { ctx, proxy }: ComponentInternalInstance | null = getCurrentInstance()
+import { ref, reactive, onMounted, getCurrentInstance } from "vue";
+import type { ComponentInternalInstance } from "vue";
+import type { FormRules, FormInstance } from "element-plus";
+import { useRouter } from "vue-router";
+
+import { useUserStore } from "@/store/index";
+
+const { ctx, proxy }: ComponentInternalInstance | null = getCurrentInstance();
+const store = useUserStore();
+const router = useRouter();
+
+onMounted(() => {});
 
 const rulesForm = reactive({
-  name: '',
-  password: ''
-})
-const ruleFormRef = ref<FormInstance>()
+  username: "",
+  password: "",
+});
+const ruleFormRef = ref<FormInstance>();
 const rules = reactive<FormRules>({
-  name: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-  ],
+  username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
   password: [
     {
       required: true,
-      message: '请输入密码',
-      trigger: 'blur',
+      message: "请输入密码",
+      trigger: "blur",
     },
   ],
-})
+});
 
 const onSubmit = async (formEl: FormInstance | undefined) => {
-  if (!formEl) return
+  if (!formEl) return;
   await formEl.validate((valid, fields) => {
     if (valid) {
-      const { name, password } = rulesForm
-      if (name === 'admin' && password === 'admin') {
+      if (rulesForm.username === "admin" && rulesForm.password === "admin") {
+        store.setUserInfo(rulesForm);
         proxy.$ElMessage({
-          message: '登录成功',
-          type: 'success',
-        })
+          message: "登录成功",
+          type: "success",
+        });
+        router.push("/home");
       } else {
         proxy.$ElMessage({
-          message: '请输入正确的用户名或密码！',
-          type: 'warning',
-        })
+          message: "请输入正确的用户名或密码！",
+          type: "warning",
+        });
       }
     }
-  })
-}
+  });
+};
 
 const onResetForm = (formEl: FormInstance | undefined) => {
-  if (!formEl) return
-  formEl.resetFields()
-}
+  if (!formEl) return;
+  formEl.resetFields();
+};
 </script>
 <style scoped lang="scss">
 .login {
